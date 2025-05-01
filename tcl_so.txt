@@ -1,0 +1,26 @@
+#include <iostream>
+#include <tcl.h>  
+#include <string.h>
+
+int MyTclCommand(ClientData clientData, Tcl_Interp *interp, int argc, const char* argv[]) {  
+    if (argc != 2) { 
+                    Tcl_Obj* objv[1]; 
+        Tcl_WrongNumArgs(interp, 0, objv, "one arg");
+        return TCL_ERROR;  
+    }  
+    char* res = "abc123";
+    Tcl_SetResult(interp, res, TCL_VOLATILE);  
+    return TCL_OK;  
+}  
+
+extern "C" int Test_Init(Tcl_Interp *interp) {  
+    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {  
+        return TCL_ERROR;  
+    }  
+    if (Tcl_CreateCommand(interp, "mycmd", MyTclCommand, NULL, NULL) == NULL) {  
+        return TCL_ERROR;  
+    }  
+  
+    return TCL_OK;  
+}  
+// 可以在TCL解析器中使用 load test.so加载动态库。注意：这里制作的动态库名字必须和初始化函数名一致，即Test_init对应库名test.so
