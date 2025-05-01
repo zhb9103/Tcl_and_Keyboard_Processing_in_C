@@ -2,3 +2,5 @@
 
 depend on TCL8.6 and TK8.6 or above;
 implemented key processing on linux;
+
+test.
