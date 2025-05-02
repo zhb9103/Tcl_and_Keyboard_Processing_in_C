@@ -1,7 +1,7 @@
 # Tcl_and_Keyboard_Processing_in_C
 
 depend on TCL8.6 and TK8.6 or above;
-implemented key processing on linux;
+implemented keyboard processing on linux;
 
 
 ssh test:
