@@ -12,5 +12,7 @@ set b 1
 
 test_para aaa bbb
 
+puts [info patchlevel]
+
 exit
 
