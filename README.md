@@ -16,4 +16,12 @@ git remote set-url origin git@github.com:zhb9103/Tcl_and_Keyboard_Processing_in_
 then git push:
 git push origin main
 
+runs:
+
+1) without tcl script:
+./test
+
+2) with tcl script:
+./test test.tcl
+
 bill test.

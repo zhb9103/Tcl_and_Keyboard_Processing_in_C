@@ -35,9 +35,18 @@
 
 using namespace std;
 
+Tcl_Interp* interp;
+int kfd = 0;
+struct termios cooked, termios_raw;
 
 char* myCppcmd() {
-        return "This is return string.";
+    printf("\ntcl: cmd.\n");
+    return "This is return string.";
+}
+
+char* myCppExitcmd() {
+    printf("\ntcl: exit cmd.\n");
+    return "exit";
 }
 
 int MyTclCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char* argv[]) {  
@@ -50,14 +59,25 @@ int MyTclCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char* ar
     return TCL_OK;  
 }  
 
+int MyTclExitCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char* argv[]) {  
+    if (argc != 1) {  
+        return TCL_ERROR;  
+    }  
+    char* res = myCppExitcmd();
+    Tcl_SetResult(interp, res, TCL_VOLATILE);  
+    // TCL����ֲ��ｨ��ʹ��Tcl_AppendResult�滻Tcl_SetResult
+    return TCL_OK;  
+} 
 
-int kfd = 0;
+
+
 
 
 int main(int argc, char **argv){
     //string input;
     std::string tcl_cmd_str="";
-    struct termios cooked, raw;
+    char *tcl_result;
+
     #define READ_CHAR_MAX 10
     char c[READ_CHAR_MAX];
     int read_char_len=0;
@@ -66,21 +86,21 @@ int main(int argc, char **argv){
     std::vector<std::string> history;//={"ls","mv a.txt b.txt","mkdir bill","test"};
     int history_index=0;
 
-    // get the console in raw mode
+    // get the console in termios_raw mode
     tcgetattr(kfd, &cooked); // �õ� termios �ṹ�屣�棬Ȼ�����������ն�
     // exit(0);
-    memcpy(&raw, &cooked, sizeof(struct termios));
-    //raw.c_lflag &=~ (ICANON);
-    raw.c_lflag &=~ (ICANON | ECHO);
+    memcpy(&termios_raw, &cooked, sizeof(struct termios));
+    //termios_raw.c_lflag &=~ (ICANON);
+    termios_raw.c_lflag &=~ (ICANON | ECHO);
     // Setting a new line, then end of file
-    raw.c_cc[VEOL] = 1;
-    raw.c_cc[VEOF] = 2;
-    //raw.c_cc[VMIN]=1;
-    //raw.c_cc[VTIME]=0;
-    tcsetattr(kfd, TCSANOW, &raw);
+    termios_raw.c_cc[VEOL] = 1;
+    termios_raw.c_cc[VEOF] = 2;
+    //termios_raw.c_cc[VMIN]=1;
+    //termios_raw.c_cc[VTIME]=0;
+    tcsetattr(kfd, TCSANOW, &termios_raw);
     /*
-    raw.c_lflag |= (ICANON | ECHO);
-    tcsetattr(kfd, TCSANOW, &raw);
+    termios_raw.c_lflag |= (ICANON | ECHO);
+    tcsetattr(kfd, TCSANOW, &termios_raw);
     exit(0);
     */
 
@@ -93,14 +113,37 @@ int main(int argc, char **argv){
     // puts("otherwise the key values will be printed");
 
 
-    Tcl_Interp* interp = Tcl_CreateInterp();
+    interp = Tcl_CreateInterp();
     Tcl_CreateCommand(interp, "mycmd", MyTclCmd, NULL, NULL);
+    Tcl_CreateCommand(interp, "exit", MyTclExitCmd, NULL, NULL);
+    if(argc>=2)
+    {
+        // int tcl_code=Tcl_EvalFile(interp,"./test.tcl");
+        int tcl_code=Tcl_EvalFile(interp,argv[1]);
+        
+        tcl_result=Tcl_GetStringResult(interp);
+        if((tcl_code)!=TCL_OK)
+        {
+            printf("exe tcl file fail.\n");
+        }
+        printf("tcl result: %s\n",tcl_result);
+        if((string)tcl_result=="exit")
+        {
+            termios_raw.c_lflag |= (ICANON | ECHO);
+            tcsetattr(kfd, TCSANOW, &termios_raw);
+            //printf("exit.\n");
+            Tcl_DeleteInterp(interp);
+            fflush(stdout);
+            exit(0);
+        }
+    }
+
     #define KEYWORD_MAX_LENGTH 256
     int keyword_position_index=0;
     int keyword_index=0;
     char keyword[KEYWORD_MAX_LENGTH];
     memset(keyword,0,KEYWORD_MAX_LENGTH);
-    // set_raw_mode(STDIN_FILENO);
+    // set_termios_raw_mode(STDIN_FILENO);
     printf("%%->");
     fflush(stdout);
     // while(true) 
@@ -196,25 +239,36 @@ int main(int argc, char **argv){
                             }
                             else
                             {
+                                const char *tcl_cmd_chs=tcl_cmd_str.c_str();
+                                Tcl_Eval(interp, tcl_cmd_chs);
+                                printf("\n");
+                                cout << Tcl_GetStringResult(interp);
+                                tcl_result=Tcl_GetStringResult(interp);
+                                if((string)tcl_result=="exit")
+                                {
+                                    termios_raw.c_lflag |= (ICANON | ECHO);
+                                    tcsetattr(kfd, TCSANOW, &termios_raw);
+                                    printf("\n");
+                                    Tcl_DeleteInterp(interp);
+                                    fflush(stdout);
+                                    exit(0);
+                                }
+                                /*
                                 if(tcl_cmd_str=="exit")
                                 {
-                                    raw.c_lflag |= (ICANON | ECHO);
-                                    tcsetattr(kfd, TCSANOW, &raw);
+                                    termios_raw.c_lflag |= (ICANON | ECHO);
+                                    tcsetattr(kfd, TCSANOW, &termios_raw);
                                     printf("\n");
                                     fflush(stdout);
+                                    Tcl_DeleteInterp(interp);
                                     exit(0);
                                 }
                                 else
                                 {
-                                    const char *tcl_cmd_chs=tcl_cmd_str.c_str();
-                                    Tcl_Eval(interp, tcl_cmd_chs);
-                                    printf("\n");
-                                    cout << Tcl_GetStringResult(interp);
-                                }
-        
+                                    
+                                }                                
+                                */
                             }
-        
-        
                             printf("\n%%->");
                             fflush(stdout);
                             keyword_index=0;
@@ -387,6 +441,6 @@ int main(int argc, char **argv){
             }
         }        
     }
-
+    Tcl_DeleteInterp(interp);
     return 0;
 }
