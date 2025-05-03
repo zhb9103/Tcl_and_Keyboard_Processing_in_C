@@ -1,5 +1,5 @@
 /*
-    Author: Bill.Zhang
+    Author: Bull.Zhang
     Date: 2025.05.01
 */
 
@@ -33,7 +33,8 @@
 #define KEYCODE_HOME 0x48
 #define KEYCODE_END  0x46
 #define KEYCODE_Q 0x71
-#define KEYCODE_DELETE 0x7e
+#define KEYCODE_DELETE 0x33
+#define KEYCODE_INSERT 0x32
 #define KEYCODE_BACKSPACE 0x7f
 
 using namespace std;
@@ -98,6 +99,11 @@ int main(int argc, char **argv){
     #define READ_CHAR_MAX 1024
     char c[READ_CHAR_MAX];
     int read_char_len=0;
+
+
+    printf("Tcl and Keyboard processing in C, Ver:0.0.1\n");
+
+
     // #define HISTORY_NUMBER 4
     std::vector<std::string> system_cmds={"ls","pwd"};
     std::vector<std::string> history;//={"ls","mv a.txt b.txt","mkdir bill","test"};
@@ -160,6 +166,8 @@ int main(int argc, char **argv){
     int keyword_position_index=0;
     int keyword_index=0;
     char keyword[KEYWORD_MAX_LENGTH];
+    int keyword_swap_buffer_index=0;
+    char keyword_swap_buffer[KEYWORD_MAX_LENGTH];
     memset(keyword,0,KEYWORD_MAX_LENGTH);
     // set_termios_raw_mode(STDIN_FILENO);
     printf("%%->");
@@ -179,7 +187,7 @@ int main(int argc, char **argv){
             exit(-1);
         }
         read_char_len=strlen(c);
-        // printf("len:%d, value: %c = 0x%02X = %d, 0x%02x\n",read_char_len, c[0], c[0], c[0], c[2]);
+        //printf("len:%d, value: %c = 0x%02X = %d, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n",read_char_len, c[0], c[0], c[0], c[1], c[2], c[3], c[4]);
         if(read_char_len>0)
         {
             if(c[0]==0x1b)
@@ -263,12 +271,6 @@ int main(int argc, char **argv){
                                 //memset(keyword,0,KEYWORD_MAX_LENGTH);
                                 break;
                             }
-                            case KEYCODE_DELETE:
-                            {
-                                //printf("\033[3~");
-                                fflush(stdout);
-                                break;
-                            }
                             case KEYCODE_HOME:
                             {
                                 //printf("\r\033[K%%->%s",history[history_index].c_str());
@@ -308,6 +310,49 @@ int main(int argc, char **argv){
                     }
                     case 4:
                     {
+                        switch(c[2])
+                        {
+                            case KEYCODE_DELETE:
+                            {
+                                //printf("\033[3~");
+                                //printf("\ndelete\n");
+                                if(keyword_index>0)
+                                {
+                                    if(keyword_position_index<keyword_index)
+                                    {
+                                        memcpy(keyword_swap_buffer,keyword,keyword_index);
+                                        memset(keyword,0,KEYWORD_MAX_LENGTH);
+                                        memcpy(&keyword[0],&keyword_swap_buffer[0],keyword_position_index);
+                                        memcpy(&keyword[keyword_position_index],&keyword_swap_buffer[keyword_position_index+1],(keyword_index-keyword_position_index)-1);
+                                        keyword_index--;
+                                        //keyword_position_index=keyword_index;
+                                        printf("\r\033[K%%->%s",keyword);
+                                        int keyword_var=0;
+                                        for(keyword_var=0;keyword_var<(keyword_index-keyword_position_index);keyword_var++)
+                                        {
+                                            printf("\033[D");
+                                        }
+                                    }
+                                }
+                                fflush(stdout);
+                                break;
+                            }
+                            case KEYCODE_INSERT:
+                            {
+                                //printf("\033[3~");
+                                //printf("\ninsert\n");
+                                fflush(stdout);
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    case 5:
+                    {
                         break;
                     }
                     default:
@@ -330,6 +375,16 @@ int main(int argc, char **argv){
                         {
                             if(keyword_index>0)
                             {
+                                if(keyword_position_index!=keyword_index)
+                                {
+                                    int keyword_var=0;
+                                    for(keyword_var=0;keyword_var<keyword_index-keyword_position_index;keyword_var++)
+                                    {
+                                        printf("\033[C");
+                                    }
+                                    keyword_position_index=keyword_index;
+                                    fflush(stdout);
+                                }
                                 printf(" \b\b \b");
                                 fflush(stdout);
                                 keyword_index--;
