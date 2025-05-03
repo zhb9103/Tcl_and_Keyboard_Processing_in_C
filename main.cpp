@@ -101,7 +101,7 @@ int main(int argc, char **argv){
     int read_char_len=0;
 
 
-    printf("Tcl and Keyboard processing in C, Ver:0.0.1\n");
+    printf("Tcl and Keyboard processing in C, Ver:0.0.2\n");
 
 
     // #define HISTORY_NUMBER 4
@@ -414,7 +414,8 @@ int main(int argc, char **argv){
                                 }
                                 else if(keyword_index==0)
                                 {
-                                    tcl_cmd_str=history[history_index];
+                                    // tcl_cmd_str=history[history_index];
+                                    tcl_cmd_str="";
                                 }
                                 else
                                 {
