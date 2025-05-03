@@ -49,6 +49,11 @@ char* myCppExitcmd() {
     return "exit";
 }
 
+char* myCppTestParacmd(int argc, const char **argv) {
+    printf("\ntcl: argc:%d, argv[1]:%s.\n",argc,argv[1]);
+    return "test_para";
+}
+
 int MyTclCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char* argv[]) {  
     if (argc != 1) {  
         return TCL_ERROR;  
@@ -70,7 +75,16 @@ int MyTclExitCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char
 } 
 
 
-
+int MyTclTestParaCmd(ClientData clientData, Tcl_Interp *interp, int argc, const char* argv[]) {  
+    if(argc<2)
+    {
+        return TCL_ERROR; 
+    }
+    char* res = myCppTestParacmd(argc,argv);
+    Tcl_SetResult(interp, res, TCL_VOLATILE);  
+    // TCL����ֲ��ｨ��ʹ��Tcl_AppendResult�滻Tcl_SetResult
+    return TCL_OK;  
+} 
 
 
 int main(int argc, char **argv){
@@ -116,6 +130,7 @@ int main(int argc, char **argv){
     interp = Tcl_CreateInterp();
     Tcl_CreateCommand(interp, "mycmd", MyTclCmd, NULL, NULL);
     Tcl_CreateCommand(interp, "exit", MyTclExitCmd, NULL, NULL);
+    Tcl_CreateCommand(interp, "test_para", MyTclTestParaCmd, NULL, NULL);
     if(argc>=2)
     {
         // int tcl_code=Tcl_EvalFile(interp,"./test.tcl");
