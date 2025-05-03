@@ -27,6 +27,8 @@
 #define KEYCODE_L 0x44
 #define KEYCODE_U 0x41
 #define KEYCODE_D 0x42
+#define KEYCODE_HOME 0x48
+#define KEYCODE_END  0x46
 #define KEYCODE_Q 0x71
 #define KEYCODE_DELETE 0x7e
 #define KEYCODE_BACKSPACE 0x7f
@@ -116,7 +118,7 @@ int main(int argc, char **argv){
             exit(-1);
         }
         read_char_len=strlen(c);
-        //printf("len:%ld, value: %c = 0x%02X = %d\n",read_char_len, c[0], c[0], c[0]);
+        // printf("len:%d, value: %c = 0x%02X = %d, 0x%02x\n",read_char_len, c[0], c[0], c[0], c[2]);
         switch (read_char_len)
         {
             case 1:
@@ -336,6 +338,35 @@ int main(int argc, char **argv){
                     {
                         //printf("\033[3~");
                         fflush(stdout);
+                        break;
+                    }
+                    case KEYCODE_HOME:
+                    {
+                        //printf("\r\033[K%%->%s",history[history_index].c_str());
+                        if(keyword_index>0)
+                        {
+                            int keyword_var=0;
+                            for(keyword_var=0;keyword_var<keyword_position_index;keyword_var++)
+                            {
+                                printf("\033[D");
+                            }
+                            keyword_position_index=0;
+                            fflush(stdout);
+                        }
+                        break;
+                    }
+                    case KEYCODE_END:
+                    {
+                        if(keyword_index>0)
+                        {
+                            int keyword_var=0;
+                            for(keyword_var=0;keyword_var<keyword_index-keyword_position_index;keyword_var++)
+                            {
+                                printf("\033[C");
+                            }
+                            keyword_position_index=keyword_index;
+                            fflush(stdout);
+                        }
                         break;
                     }
                     default:
