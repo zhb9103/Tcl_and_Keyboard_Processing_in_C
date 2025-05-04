@@ -23,6 +23,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+//#include "argparse.hpp"
 // #include <conio.h> //windows os;
 
 
@@ -168,6 +169,7 @@ int main(int argc, char **argv){
     char keyword[KEYWORD_MAX_LENGTH];
     int keyword_swap_buffer_index=0;
     char keyword_swap_buffer[KEYWORD_MAX_LENGTH];
+    int insert_mode=0;
     memset(keyword,0,KEYWORD_MAX_LENGTH);
     // set_termios_raw_mode(STDIN_FILENO);
     printf("%%->");
@@ -341,7 +343,15 @@ int main(int argc, char **argv){
                             {
                                 //printf("\033[3~");
                                 //printf("\ninsert\n");
-                                fflush(stdout);
+                                if(insert_mode)
+                                {
+                                    insert_mode=0;
+                                }
+                                else
+                                {
+                                    insert_mode=1;
+                                }
+                                //fflush(stdout);
                                 break;
                             }
                             default:
@@ -495,13 +505,37 @@ int main(int argc, char **argv){
                                     keyword[keyword_index]=temp_c;
                                     keyword_index++;
                                     keyword_position_index=keyword_index;
+                                    printf("%c",temp_c);
+                                    fflush(stdout);
                                 } 
                                 else if((keyword_index>0)&&((temp_c>=0x20)&&(temp_c<=0x7e)))
                                 {
                                     if(keyword_position_index<keyword_index)
                                     {
-                                        keyword[keyword_position_index]=temp_c;
-                                        keyword_position_index++;
+                                        if(insert_mode)
+                                        {
+                                            // insert mode;
+                                            memcpy(keyword_swap_buffer,keyword,keyword_index);
+                                            memset(keyword,0,KEYWORD_MAX_LENGTH);
+                                            memcpy(&keyword[0],&keyword_swap_buffer[0],keyword_position_index);
+                                            keyword[keyword_position_index]=temp_c;
+                                            memcpy(&keyword[keyword_position_index+1],&keyword_swap_buffer[keyword_position_index],(keyword_index-keyword_position_index));
+                                            keyword_index++;
+                                            printf("\r\033[K%%->%s",keyword);
+                                            int keyword_var=0;
+                                            for(keyword_var=0;keyword_var<(keyword_index-keyword_position_index);keyword_var++)
+                                            {
+                                                printf("\033[D");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // replace mode;
+                                            keyword[keyword_position_index]=temp_c;
+                                            keyword_position_index++;
+                                            printf("%c",temp_c);
+                                        }                        
+                                        fflush(stdout);
                                     }
                                     else
                                     {
@@ -511,15 +545,12 @@ int main(int argc, char **argv){
                                             keyword_index++;
                                             keyword_position_index=keyword_index;
                                         }
+                                        printf("%c",temp_c);
+                                        fflush(stdout);
                                     }
                                 }
                             }
-                            if(temp_c!='\n')
-                            {
-                                //printf("%d:%c ",keyword_index,c);
-                                printf("%c",temp_c);
-                                fflush(stdout);
-                            }
+                            
                             break;
                         }
                     }
