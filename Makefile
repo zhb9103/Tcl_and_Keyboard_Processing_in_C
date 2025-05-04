@@ -11,7 +11,7 @@ all: clean compile
 
 
 compile:
-	g++-10 -std=c++17 -g main.cpp -o test  -I$(TCL_INCLUDE_HOME)  -ltcl8.6 -ltk8.6 -lpthread -fpermissive -lncurses
+	g++-10 -std=c++11 -g main.cpp -o test  -I$(TCL_INCLUDE_HOME)  -ltcl8.6 -ltk8.6 -lpthread -fpermissive -lncurses
 	#g++ -g main.cpp -o test  -I$(TCL_INCLUDE_HOME) -I$(ARGPARSE_INCLUDE_HOME) -ltcl9.1 -ltcl9tk9.1 -lpthread -fpermissive -lncurses
 
 

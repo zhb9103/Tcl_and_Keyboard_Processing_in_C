@@ -23,7 +23,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-//#include "argparse.hpp"
+#include "argparser.hpp"
 // #include <conio.h> //windows os;
 
 
@@ -102,7 +102,7 @@ int main(int argc, char **argv){
     int read_char_len=0;
 
 
-    printf("Tcl and Keyboard processing in C, Ver:0.0.2\n");
+    printf("Tcl and Keyboard processing in C, Ver:0.0.3\n");
 
 
     // #define HISTORY_NUMBER 4
@@ -135,7 +135,16 @@ int main(int argc, char **argv){
     // puts("---------------------------");
     // puts("Use arrow keys to move the robot.");
     // puts("otherwise the key values will be printed");
-
+    ap::parser p(argc, argv);
+    p.add("-f", "--firstname",  "File name");
+    auto args = p.parse();
+    if (!args.parsed_successfully()) 
+    {
+        std::cerr << "Unsuccessful parse\n";	
+        return -1;
+    }
+    auto fileName = args["-f"];
+    // printf("%s\n",fileName.c_str());
 
     interp = Tcl_CreateInterp();
     Tcl_CreateCommand(interp, "mycmd", MyTclCmd, NULL, NULL);
@@ -144,12 +153,18 @@ int main(int argc, char **argv){
     if(argc>=2)
     {
         // int tcl_code=Tcl_EvalFile(interp,"./test.tcl");
-        int tcl_code=Tcl_EvalFile(interp,argv[1]);
+        int tcl_code=Tcl_EvalFile(interp,fileName.c_str());
         
         tcl_result=Tcl_GetStringResult(interp);
         if((tcl_code)!=TCL_OK)
         {
-            printf("exe tcl file fail.\n");
+            printf("exe tcl file fail, file name:%s.\n",fileName.c_str());
+            termios_raw.c_lflag |= (ICANON | ECHO);
+            tcsetattr(kfd, TCSANOW, &termios_raw);
+            //printf("exit.\n");
+            Tcl_DeleteInterp(interp);
+            fflush(stdout);
+            exit(0);
         }
         printf("tcl result: %s\n",tcl_result);
         if((string)tcl_result=="exit")

@@ -4,6 +4,11 @@ depend on TCL8.6 and TK8.6 or above;
 
 implemented keyboard processing on linux;
 
+support argparser;
+
+depend on c++11 or above;
+
+
 
 ssh test:
 ssh -T git@github.com
@@ -22,6 +27,6 @@ runs:
 ./test
 
 2) with tcl script:
-./test test.tcl
+./test -f test.tcl
 
 bill test.
